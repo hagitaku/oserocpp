@@ -83,11 +83,11 @@ vector<vector<int> > turned(Pos pos,vector<vector<int> > table,int playernumber)
 int nullmap(vector<vector<int> > table){
 	int a=0,b=0,c=0;
 	int ysize=table.size();
-	for(int i=0;i<ysize;i++){
-		for(int j=0;j<table[i].size();j++){
-			if(table[i][j]==0)a++;
-			else if(table[i][j]==1)b++;
-			else if(table[i][j]==-1)c++;
+	for(auto itr:table){
+		for(auto idx:itr){
+			if(idx==0)a++;
+			else if(idx==1)b++;
+			else if(idx==-1)c++;
 		}
 	}
 	if(a==0){
@@ -118,13 +118,11 @@ vector<Pos> getcanpos(vector<vector<int> > table,int playernumber){
 int judge(vector<vector<int> > table,int playernumber){
 	int mikata=0;
 	int teki=0;
-	for each (vector<int> vec in table)
-	{
-		for each (int ind in vec){
-			if(table[i][j]==playernumber)
-			{
+	for(auto itr:table){
+		for(auto idx:itr){
+			if(idx==playernumber){
 				mikata++;
-			}else{
+			}else if(idx==-playernumber){
 				teki++;
 			}
 		}
@@ -143,7 +141,7 @@ int monte(vector<vector<int> > table,int playernumber,int color,int depth,int d,
 	if(tabletimes[d]==tablevalue){
 		return 0;
 	}
-	if(nullmap(table)==1||(getcanpos(table,1).size()==0 and getcanpos(table,-1).size()==0)){
+	if(nullmap(table)==1||(getcanpos(table,1).size()==0 && getcanpos(table,-1).size()==0)){
 		tabletimes[d]++;
 		return judge(table,color);
 	}
