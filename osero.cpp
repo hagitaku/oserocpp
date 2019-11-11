@@ -5,18 +5,28 @@
 #include<time.h>
 using namespace std;
 
-int roottable[10][10]={
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
-{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+vector<vector<int> > roottable(10,vector<int>(10));
+int player[2]={1,-1};
+int playercolor;
+int turn=0;
+int init()
+{
+	cout<<"inputcolor(1 or -1)\nblack:1,white:-1:";
+	cin>>playercolor;
+	roottable={
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
+		{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
+		return 0;
+}
 
 class Pos{
 public:
@@ -63,7 +73,21 @@ int canput(int x,int y,vector<vector<int> > table,int playernumber){
 	return 0;
 }
 
-int reverse(int x,int y,int i,vector<vector<int> > table,int playernumber){
+int reverse(int x,int y,int i,vector<vector<int> >& table,int playernumber){
+	if(checkfield(x,y)==0||table[y][x]==0)
+	{
+		return 0;
+	}
+	if(table[y][x]==playernumber)
+	{
+		return 1;
+	}
+	if(reverse(x+dirx[i],y+diry[i],i,table,playernumber)==1)
+	{
+		table[y][x]=playernumber;
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -184,20 +208,16 @@ int launchmonte(vector<vector<int> > table,int playernumber,Pos pos,int i,vector
 }
 
 
-
-
-
-
 int drawmap(vector<vector<int> > table,int playernumber){
 	int y=table.size();
 	vector<Pos> can=getcanpos(table,playernumber);
 	printf("   ");
 	for(int i=0;i<10;i++){
-		printf("%3d",i+1);
+		printf("%3d",i);
 	}
 	printf("\n");
 	for (int i = 0; i < y; i++){
-		printf("%3d",i+1);
+		printf("%3d",i);
 		for (int j = 0; j < table[i].size(); j++){
 			int flg=0;
 			for(int k=0;k<can.size();k++){
@@ -244,10 +264,18 @@ Pos runAI(vector<vector<int> > table,int playernumber){
 
 
 int main(){
-	vector<vector<int> > table(10);
-	for(int i=0;i<10;i++){
-		for(int j=0;j<10;j++){
-			table[i].push_back(roottable[i][j]);
+	Pos pos;
+	init();//盤面の初期化
+	for(;;turn++)
+	{
+		int nowplayer=player[turn%2];
+		drawmap(roottable,nowplayer);
+		if(nowplayer==playercolor)
+		{
+			cout<<"input x,y:";
+			cin>>pos.x>>pos.y;
+		}else{
+			pos=runAI(roottable,nowplayer);
 		}
 	}
 	return 0;
