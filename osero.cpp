@@ -4,29 +4,30 @@
 #include<stdlib.h>
 #include<time.h>
 #include<cmath>
+#define WIDTH 10
 using namespace std;
 
-vector<vector<int> > roottable(10,vector<int>(10));
 int player[2]={1,-1};
 int playercolor;
-int turn=0;
+int swi=0;
 double k=1;
+int roottable[WIDTH][WIDTH]={
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
 int init()
 {
 	cout<<"inputcolor(1 or -1)\nblack:1,white:-1:";
 	cin>>playercolor;
-	roottable={
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
-		{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	};
+	
 		return 0;
 }
 
@@ -37,7 +38,7 @@ public:
 };
 
 int width=20;
-int tablevalue=100;
+int tablevalue=50000;
 
 int dirx[8]={-1, 0, 1, 1, 1, 0,-1,-1};
 int diry[8]={-1,-1,-1, 0, 1, 1, 1, 0};
@@ -47,7 +48,16 @@ int checkfield(int x,int y){
 	return (0<=x&&x<=9&&0<y&&y<=9)?1:0;
 }
 
-int canputflg(int x,int y,vector<vector<int> > table,int i,int playernumber){
+int deepcopy(int root[WIDTH][WIDTH],int table[WIDTH][WIDTH]){
+	for(int i=0;i<WIDTH;i++){
+		for(int j=0;j<WIDTH;j++){
+			table[i][j]=root[i][j];
+		}
+	}
+	return 0;
+}
+
+int canputflg(int x,int y,int table[WIDTH][WIDTH],int i,int playernumber){
 	if(checkfield(x,y)==0){
 		return 0;
 	}else if(table[y][x]==0){
@@ -59,7 +69,7 @@ int canputflg(int x,int y,vector<vector<int> > table,int i,int playernumber){
 	}
 }
 
-int canput(int x,int y,vector<vector<int> > table,int playernumber){
+int canput(int x,int y,int table[WIDTH][WIDTH],int playernumber){
 	if(table[y][x]!=0){
 		return 0;
 	}
@@ -76,7 +86,7 @@ int canput(int x,int y,vector<vector<int> > table,int playernumber){
 	return 0;
 }
 
-int reverse(int x,int y,int i,vector<vector<int> >& table,int playernumber){
+int reverse(int x,int y,int i,int table[WIDTH][WIDTH],int playernumber){
 	if(checkfield(x,y)==0||table[y][x]==0)
 	{
 		return 0;
@@ -94,27 +104,26 @@ int reverse(int x,int y,int i,vector<vector<int> >& table,int playernumber){
 	return 0;
 }
 
-vector<vector<int> > turned(Pos pos,vector<vector<int> > table,int playernumber){
-	vector<vector<int> > tablemap=table;
-	if(canput(pos.x,pos.y,tablemap,playernumber)==1){
-		tablemap[pos.y][pos.x]=playernumber;
+int turn(Pos pos,int table[WIDTH][WIDTH],int playernumber){
+	if(canput(pos.x,pos.y,table,playernumber)==1){
+		table[pos.y][pos.x]=playernumber;
 		for (int i = 0; i < 8; i++){
-			reverse(pos.x+dirx[i],pos.y+diry[i],i,tablemap,playernumber);
+			reverse(pos.x+dirx[i],pos.y+diry[i],i,table,playernumber);
 		}
 	}
-	return tablemap;
+	return 0;
 }
 
 
 
-int nullmap(vector<vector<int> > table){
+int nullmap(int table[WIDTH][WIDTH]){
 	int a=0,b=0,c=0;
-	int ysize=table.size();
-	for(auto itr:table){
-		for(auto idx:itr){
-			if(idx==0)a++;
-			else if(idx==1)b++;
-			else if(idx==-1)c++;
+	int ysize=WIDTH;
+	for(int i=0;i<WIDTH;i++){
+		for(int j=0;j<WIDTH;j++){
+			if(table[i][j]==0)a++;
+			else if(table[i][j]==1)b++;
+			else if(table[i][j]==-1)c++;
 		}
 	}
 	if(a==0){
@@ -126,10 +135,10 @@ int nullmap(vector<vector<int> > table){
 }
 
 
-vector<Pos> getcanpos(vector<vector<int> > table,int playernumber){
+vector<Pos> getcanpos(int table[WIDTH][WIDTH],int playernumber){
 	vector<Pos> list;
-	for(int i=0;i<table.size();i++){
-		for(int j=0;j<table[i].size();j++){
+	for(int i=0;i<WIDTH;i++){
+		for(int j=0;j<WIDTH;j++){
 			if(canput(j,i,table,playernumber)==1){
 				Pos pos;
 				pos.x=j;
@@ -142,14 +151,14 @@ vector<Pos> getcanpos(vector<vector<int> > table,int playernumber){
 }
 
 
-int judge(vector<vector<int> > table,int playernumber){
+int judge(int table[WIDTH][WIDTH],int playernumber){
 	int mikata=0;
 	int teki=0;
-	for(auto itr:table){
-		for(auto idx:itr){
-			if(idx==playernumber){
+	for(int i=0;i<WIDTH;i++){
+		for(int j=0;j<WIDTH;j++){
+			if(table[i][j]==playercolor){
 				mikata++;
-			}else if(idx==-playernumber){
+			}else if(table[i][j]==-playercolor){
 				teki++;
 			}
 		}
@@ -162,7 +171,7 @@ int judge(vector<vector<int> > table,int playernumber){
 	}
 }
 
-int monte(vector<vector<int> > table,int playernumber,int color){
+int monte(int table[WIDTH][WIDTH],int playernumber,int color){
 	if(nullmap(table)==1||(getcanpos(table,1).size()==0 && getcanpos(table,-1).size()==0)){
 		return judge(table,color);
 	}
@@ -170,7 +179,8 @@ int monte(vector<vector<int> > table,int playernumber,int color){
 	for(int i=0;i<poslist.size();i++){
 		if((poslist[i].y==0&&poslist[i].x==0)||(poslist[i].y==0&&poslist[i].x==9)||(poslist[i].y==9&&poslist[i].x==0)||(poslist[i].y==9&&poslist[i].x==9))
 		{
-			return monte(turned(poslist[i],table,playernumber),-playernumber,playernumber);
+			turn(poslist[i],table,playernumber);
+			return monte(table,-playernumber,playernumber);
 		}
 	}
 	int count=0;
@@ -179,13 +189,13 @@ int monte(vector<vector<int> > table,int playernumber,int color){
 		//pass
 		return monte(table,-playernumber,color);
 	}
-	return monte(turned(poslist[rand()%wi],table,playernumber),-playernumber,playernumber);
+	return 0;
 }
 
 
 
-int drawmap(vector<vector<int> > table,int playernumber){
-	int y=table.size();
+int drawmap(int table[WIDTH][WIDTH],int playernumber){
+	int y=WIDTH;
 	vector<Pos> can=getcanpos(table,playernumber);
 	printf("   ");
 	for(int i=0;i<10;i++){
@@ -194,7 +204,7 @@ int drawmap(vector<vector<int> > table,int playernumber){
 	printf("\n");
 	for (int i = 0; i < y; i++){
 		printf("%3d",i);
-		for (int j = 0; j < table[i].size(); j++){
+		for (int j = 0; j < WIDTH; j++){
 			int flg=0;
 			for(int k=0;k<can.size();k++){
 				if(can[k].y==i&&can[k].x==j){
@@ -217,9 +227,11 @@ int drawmap(vector<vector<int> > table,int playernumber){
 }
 
 
-Pos runAI(vector<vector<int> > table,int playernumber){
+Pos runAI(int table[WIDTH][WIDTH],int playernumber){
 	vector<Pos> posli=getcanpos(table,playernumber);
 	int n=posli.size();
+
+	
 	for(int i=0;i<n;i++){
 		if((posli[i].y==0&&posli[i].x==0)||(posli[i].y==0&&posli[i].x==9)||(posli[i].y==9&&posli[i].x==0)||(posli[i].y==9&&posli[i].x==9))
 		{
@@ -230,15 +242,21 @@ Pos runAI(vector<vector<int> > table,int playernumber){
 	for(int i=0;i<n;i++){
 		valuelist[i]=0;
 	}
+
+
 	vector<int> trycount(n);
 	vector<long double> ucbvalue(n);
 	for(int i=0;i<n;i++)
 	{
-		auto ta=turned(posli[i],table,playernumber);
-		valuelist[i]+=monte(ta,-playernumber,playernumber);
+		int ct[WIDTH][WIDTH];
+		deepcopy(table,ct);
+		turn(posli[i],ct,playernumber);
+		valuelist[i]+=monte(ct,-playernumber,playernumber);
 		trycount[i]+=1;
 	}
 	int maxindex=0;
+
+
 	for(int i=4;i<=tablevalue;i++){
 		maxindex=0;
 		for(int k=0;k<n;k++){
@@ -249,11 +267,15 @@ Pos runAI(vector<vector<int> > table,int playernumber){
 				maxindex=k;
 			}
 		}
-		auto ta=turned(posli[maxindex],table,playernumber);
+		int ta[WIDTH][WIDTH];
+		deepcopy(table,ta);
 		valuelist[maxindex]+=monte(ta,-playernumber,playernumber);
 		trycount[maxindex]+=1;
-		cout<<i<<endl;
 	}
+	for(int i=0;i<n;i++){
+		cout<<ucbvalue[i]<<"  ";
+	}
+	cout<<"\n";
 	for(int k=1;k<n;k++){
 		if(ucbvalue[maxindex]<ucbvalue[maxindex]){
 			maxindex=k;
@@ -268,10 +290,10 @@ int main(){
 	srand(time(NULL));
 	Pos pos;
 	init();//盤面の初期化
-	int nowplayer=player[turn%2];
-	for(;;turn++)
+	int nowplayer=player[swi%2];
+	for(;;swi++)
 	{
-	nowplayer=player[turn%2];
+	nowplayer=player[swi%2];
 
 	if(nowplayer==playercolor)
 		{
@@ -281,7 +303,7 @@ int main(){
 				char are;
 				cin>>pos.x>>are>>pos.y;
 				if(checkfield(pos.x,pos.y)==1&&canput(pos.x,pos.y,roottable,nowplayer)==1){
-					roottable=turned(pos,roottable,nowplayer);
+					turn(pos,roottable,nowplayer);
 					break;
 				}
 				system("cls");
@@ -289,7 +311,7 @@ int main(){
 			}
 		}else{
 			pos=runAI(roottable,nowplayer);
-			roottable=turned(pos,roottable,nowplayer);
+			turn(pos,roottable,nowplayer);
 		}
 	}
 	return 0;
