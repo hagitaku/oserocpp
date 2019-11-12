@@ -3,12 +3,14 @@
 #include<algorithm>
 #include<stdlib.h>
 #include<time.h>
+#include<cmath>
 using namespace std;
 
 vector<vector<int> > roottable(10,vector<int>(10));
 int player[2]={1,-1};
 int playercolor;
 int turn=0;
+double k=1;
 int init()
 {
 	cout<<"inputcolor(1 or -1)\nblack:1,white:-1:";
@@ -35,12 +37,13 @@ public:
 };
 
 int width=20;
-int tablevalue=1000;
+int tablevalue=100;
 
 int dirx[8]={-1, 0, 1, 1, 1, 0,-1,-1};
 int diry[8]={-1,-1,-1, 0, 1, 1, 1, 0};
 
 int checkfield(int x,int y){
+
 	return (0<=x&&x<=9&&0<y&&y<=9)?1:0;
 }
 
@@ -159,53 +162,26 @@ int judge(vector<vector<int> > table,int playernumber){
 	}
 }
 
-int monte(vector<vector<int> > table,int playernumber,int color,int depth,int d,vector<int>& tabletimes){
-	srand(time(NULL));
-	vector<int> randlist;
-	if(tabletimes[d]==tablevalue){
-		return 0;
-	}
+int monte(vector<vector<int> > table,int playernumber,int color){
 	if(nullmap(table)==1||(getcanpos(table,1).size()==0 && getcanpos(table,-1).size()==0)){
-		tabletimes[d]++;
 		return judge(table,color);
 	}
 	vector<Pos> poslist=getcanpos(table,playernumber);
+	for(int i=0;i<poslist.size();i++){
+		if((poslist[i].y==0&&poslist[i].x==0)||(poslist[i].y==0&&poslist[i].x==9)||(poslist[i].y==9&&poslist[i].x==0)||(poslist[i].y==9&&poslist[i].x==9))
+		{
+			return monte(turned(poslist[i],table,playernumber),-playernumber,playernumber);
+		}
+	}
 	int count=0;
 	int wi=poslist.size();
 	if(wi==0){
-		return monte(table,-playernumber,playernumber,depth,d,tabletimes);
+		//pass
+		return monte(table,-playernumber,color);
 	}
-
-	for(int i=0;i<min(wi,width);i++){
-		int randindex=0;
-		while(1){
-			int flg=0;
-			randindex=rand()%wi;
-			for(int j=0;j<randlist.size();j++){
-				if(randlist[j]==randindex){
-					flg=1;
-					break;
-				}
-			}
-			if(flg==0)break;
-		}
-		vector<vector<int> > tablemap=table;
-		tablemap=turned(poslist[i],tablemap,playernumber);
-		count+=monte(tablemap,-playernumber,playernumber,depth+1,d,tabletimes);
-	}
-	return count;
-
+	return monte(turned(poslist[rand()%wi],table,playernumber),-playernumber,playernumber);
 }
 
-
-int launchmonte(vector<vector<int> > table,int playernumber,Pos pos,int i,vector<double>& valuelist){
-	int depth=1;
-	vector<vector<int> > tablemap=table;
-	tablemap=turned(pos,tablemap,playernumber);
-	vector<int> tabletimes(tablevalue,0);
-	valuelist[i]=monte(tablemap,-playernumber,playernumber,depth,i,tabletimes)/tablevalue;
-	return 0;
-}
 
 
 int drawmap(vector<vector<int> > table,int playernumber){
@@ -250,32 +226,70 @@ Pos runAI(vector<vector<int> > table,int playernumber){
 			return posli[i];
 		}
 	}
-	vector<long double> value(n);
-	vector<long double> trycount(n);
-	vector<int> winpercent(n);
+	int valuelist[n];
+	for(int i=0;i<n;i++){
+		valuelist[i]=0;
+	}
+	vector<int> trycount(n);
+	vector<long double> ucbvalue(n);
 	for(int i=0;i<n;i++)
 	{
+		auto ta=turned(posli[i],table,playernumber);
+		valuelist[i]+=monte(ta,-playernumber,playernumber);
 		trycount[i]+=1;
-
 	}
-	return posli[0];
+	int maxindex=0;
+	for(int i=4;i<=tablevalue;i++){
+		maxindex=0;
+		for(int k=0;k<n;k++){
+			ucbvalue[k]=(double)valuelist[k]/(double)trycount[k]+k*sqrt((log(i)/(double)trycount[k]));
+		}
+		for(int k=1;k<n;k++){
+			if(ucbvalue[maxindex]<ucbvalue[maxindex]){
+				maxindex=k;
+			}
+		}
+		auto ta=turned(posli[maxindex],table,playernumber);
+		valuelist[maxindex]+=monte(ta,-playernumber,playernumber);
+		trycount[maxindex]+=1;
+		cout<<i<<endl;
+	}
+	for(int k=1;k<n;k++){
+		if(ucbvalue[maxindex]<ucbvalue[maxindex]){
+			maxindex=k;
+		}
+	}
+	return posli[maxindex];
 }
 
 
 
 int main(){
+	srand(time(NULL));
 	Pos pos;
 	init();//盤面の初期化
+	int nowplayer=player[turn%2];
 	for(;;turn++)
 	{
-		int nowplayer=player[turn%2];
-		drawmap(roottable,nowplayer);
-		if(nowplayer==playercolor)
+	nowplayer=player[turn%2];
+
+	if(nowplayer==playercolor)
 		{
-			cout<<"input x,y:";
-			cin>>pos.x>>pos.y;
+			drawmap(roottable,nowplayer);
+			cout<<"input x y:";
+			while(true){
+				char are;
+				cin>>pos.x>>are>>pos.y;
+				if(checkfield(pos.x,pos.y)==1&&canput(pos.x,pos.y,roottable,nowplayer)==1){
+					roottable=turned(pos,roottable,nowplayer);
+					break;
+				}
+				system("cls");
+				cout<<"Invalid.\nPlaease type it again\n";
+			}
 		}else{
 			pos=runAI(roottable,nowplayer);
+			roottable=turned(pos,roottable,nowplayer);
 		}
 	}
 	return 0;
