@@ -4,13 +4,15 @@
 #include<stdlib.h>
 #include<time.h>
 #include<cmath>
+#include<random>
 #define WIDTH 10
 using namespace std;
-
+random_device rnd;
+int drawmap(int table[WIDTH][WIDTH],int playernumber);
 int player[2]={1,-1};
 int playercolor;
 int swi=0;
-double k=1;
+double are=0.6;
 int roottable[WIDTH][WIDTH]={
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -38,14 +40,14 @@ public:
 };
 
 int width=20;
-int tablevalue=50000;
+int tablevalue=5000;
 
 int dirx[8]={-1, 0, 1, 1, 1, 0,-1,-1};
 int diry[8]={-1,-1,-1, 0, 1, 1, 1, 0};
 
 int checkfield(int x,int y){
 
-	return (0<=x&&x<=9&&0<y&&y<=9)?1:0;
+	return (0<=x&&x<=9&&0<=y&&y<=9)?1:0;
 }
 
 int deepcopy(int root[WIDTH][WIDTH],int table[WIDTH][WIDTH]){
@@ -77,7 +79,7 @@ int canput(int x,int y,int table[WIDTH][WIDTH],int playernumber){
 		return 0;
 	}
 	for(int i=0;i<8;i++){
-		if(checkfield(x+dirx[i],y+diry[i])==1&&table[y+diry[i]][x+dirx[i]]==-1*playernumber){
+		if(checkfield(x+dirx[i],y+diry[i])==1&&table[y+diry[i]][x+dirx[i]]==-1*playernumber){//範囲内&&向いている方向が敵だったら
 			if(canputflg(x+dirx[i],y+diry[i],table,i,playernumber)==1){
 				return 1;
 			}
@@ -156,14 +158,13 @@ int judge(int table[WIDTH][WIDTH],int playernumber){
 	int teki=0;
 	for(int i=0;i<WIDTH;i++){
 		for(int j=0;j<WIDTH;j++){
-			if(table[i][j]==playercolor){
+			if(table[i][j]==playernumber){
 				mikata++;
-			}else if(table[i][j]==-playercolor){
+			}else if(table[i][j]==-playernumber){
 				teki++;
 			}
 		}
 	}
-
 	if(teki<mikata){
 		return 1;
 	}else{
@@ -177,10 +178,9 @@ int monte(int table[WIDTH][WIDTH],int playernumber,int color){
 	}
 	vector<Pos> poslist=getcanpos(table,playernumber);
 	for(int i=0;i<poslist.size();i++){
-		if((poslist[i].y==0&&poslist[i].x==0)||(poslist[i].y==0&&poslist[i].x==9)||(poslist[i].y==9&&poslist[i].x==0)||(poslist[i].y==9&&poslist[i].x==9))
-		{
+		if((poslist[i].y==0&&poslist[i].x==0)||(poslist[i].y==0&&poslist[i].x==9)||(poslist[i].y==9&&poslist[i].x==0)||(poslist[i].y==9&&poslist[i].x==9)){
 			turn(poslist[i],table,playernumber);
-			return monte(table,-playernumber,playernumber);
+			return monte(table,-playernumber,color);
 		}
 	}
 	int count=0;
@@ -189,7 +189,8 @@ int monte(int table[WIDTH][WIDTH],int playernumber,int color){
 		//pass
 		return monte(table,-playernumber,color);
 	}
-	return 0;
+	turn(poslist[rnd()%wi],table,playernumber);
+	return monte(table,-playernumber,color);
 }
 
 
@@ -215,7 +216,7 @@ int drawmap(int table[WIDTH][WIDTH],int playernumber){
 			if(flg==1){
 				printf("  *");
 			}else if(table[i][j]==0){
-				printf("   ");
+				printf("  -");
 			}else{
 				printf("%3d",table[i][j]);
 			}
@@ -246,58 +247,75 @@ Pos runAI(int table[WIDTH][WIDTH],int playernumber){
 
 	vector<int> trycount(n);
 	vector<long double> ucbvalue(n);
-	for(int i=0;i<n;i++)
+	for(int i=0;i<n*2;i++)
 	{
 		int ct[WIDTH][WIDTH];
 		deepcopy(table,ct);
-		turn(posli[i],ct,playernumber);
-		valuelist[i]+=monte(ct,-playernumber,playernumber);
-		trycount[i]+=1;
+		turn(posli[i%n],ct,playernumber);
+		valuelist[i%n]+=monte(ct,-playernumber,playernumber);
+		trycount[i%n]+=1;
 	}
 	int maxindex=0;
-
-
-	for(int i=4;i<=tablevalue;i++){
+	for(int i=n*2;i<=tablevalue;i++){
+		if(i%1000==0){
+			cout<<i<<endl;
+		}
 		maxindex=0;
 		for(int k=0;k<n;k++){
-			ucbvalue[k]=(double)valuelist[k]/(double)trycount[k]+k*sqrt((log(i)/(double)trycount[k]));
+			ucbvalue[k]=(double)valuelist[k]/(double)trycount[k]+are*sqrt((log(i)/(double)trycount[k]));
 		}
 		for(int k=1;k<n;k++){
-			if(ucbvalue[maxindex]<ucbvalue[maxindex]){
+			if(ucbvalue[maxindex]<ucbvalue[k]){
 				maxindex=k;
 			}
 		}
 		int ta[WIDTH][WIDTH];
 		deepcopy(table,ta);
+		turn(posli[maxindex],ta,playernumber);
 		valuelist[maxindex]+=monte(ta,-playernumber,playernumber);
 		trycount[maxindex]+=1;
 	}
+	//*
+	//探索完了
+	//勝ちの出力
+	for(int i=0;i<n;i++){
+		cout<<valuelist[i]<<"  ";
+	}
+	cout<<"\n";
+	//UCB1値計算
 	for(int i=0;i<n;i++){
 		cout<<ucbvalue[i]<<"  ";
 	}
 	cout<<"\n";
+	//勝率
+	for(int i=0;i<n;i++){
+		cout<<valuelist[i]/trycount[i]<<"  ";
+	}
+	cout<<"\n";
+//*/
+	maxindex=0;
 	for(int k=1;k<n;k++){
-		if(ucbvalue[maxindex]<ucbvalue[maxindex]){
+		if(ucbvalue[maxindex]<ucbvalue[k]){
 			maxindex=k;
 		}
 	}
+	cout<<maxindex<<endl;
 	return posli[maxindex];
 }
 
 
 
 int main(){
-	srand(time(NULL));
 	Pos pos;
 	init();//盤面の初期化
 	int nowplayer=player[swi%2];
 	for(;;swi++)
 	{
 	nowplayer=player[swi%2];
-
+	drawmap(roottable,nowplayer);
 	if(nowplayer==playercolor)
 		{
-			drawmap(roottable,nowplayer);
+			
 			cout<<"input x y:";
 			while(true){
 				char are;
@@ -306,7 +324,6 @@ int main(){
 					turn(pos,roottable,nowplayer);
 					break;
 				}
-				system("cls");
 				cout<<"Invalid.\nPlaease type it again\n";
 			}
 		}else{
