@@ -289,7 +289,7 @@ Pos runAI(int table[WIDTH][WIDTH],int playernumber){
 	cout<<"\n";
 	//勝率
 	for(int i=0;i<n;i++){
-		cout<<valuelist[i]/trycount[i]<<"  ";
+		cout<<(double)valuelist[i]/(double)trycount[i]<<"  ";
 	}
 	cout<<"\n";
 //*/
@@ -313,10 +313,13 @@ int main(){
 	{
 	nowplayer=player[swi%2];
 	drawmap(roottable,nowplayer);
+	if(getcanpos(roottable,1).size()==0&&getcanpos(roottable,-1).size()==0){
+		break;
+	}
 	if(nowplayer==playercolor)
 		{
 			
-			cout<<"input x y:";
+			cout<<"input x,y:";
 			while(true){
 				char are;
 				cin>>pos.x>>are>>pos.y;
@@ -331,5 +334,6 @@ int main(){
 			turn(pos,roottable,nowplayer);
 		}
 	}
+	cout<<"black:"<<judge(roottable,1)<<"white:"<<judge(roottable,-1)<<endl;;
 	return 0;
 }
