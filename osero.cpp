@@ -12,8 +12,20 @@ int drawmap(int table[WIDTH][WIDTH],int playernumber);
 int player[2]={1,-1};
 int playercolor;
 int swi=0;
-double are=0.6;
+double are=0.333;
 int roottable[WIDTH][WIDTH]={
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+double valuetable[WIDTH][WIDTH]={
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -40,10 +52,21 @@ public:
 };
 
 int width=20;
-int tablevalue=5000;
+int tablevalue=8000;
 
 int dirx[8]={-1, 0, 1, 1, 1, 0,-1,-1};
 int diry[8]={-1,-1,-1, 0, 1, 1, 1, 0};
+
+int drawvalue(){
+	for (int i = 0; i < WIDTH; i++){
+		for(int j = 0; j <WIDTH; j++){
+			printf("%f  ",valuetable[i][j]/tablevalue);
+		}
+		printf("\n");
+	}
+	printf("\n");
+	return 0;
+}
 
 int checkfield(int x,int y){
 
@@ -166,8 +189,22 @@ int judge(int table[WIDTH][WIDTH],int playernumber){
 		}
 	}
 	if(teki<mikata){
+		for(int i=0;i<WIDTH;i++){
+			for(int j=0;j<WIDTH;j++){
+				if(table[i][j]==playernumber){
+					valuetable[i][j]++;
+				}
+			}
+		}
 		return 1;
 	}else{
+		for(int i=0;i<WIDTH;i++){
+			for(int j=0;j<WIDTH;j++){
+				if(table[i][j]==-playernumber){
+					valuetable[i][j]++;
+				}
+			}
+		}
 		return 0;
 	}
 }
@@ -316,6 +353,9 @@ int main(){
 	if(getcanpos(roottable,1).size()==0&&getcanpos(roottable,-1).size()==0){
 		break;
 	}
+	if(getcanpos(roottable,nowplayer).size()==0){
+		continue;
+	}
 	if(nowplayer==playercolor)
 		{
 			
@@ -333,7 +373,8 @@ int main(){
 			pos=runAI(roottable,nowplayer);
 			turn(pos,roottable,nowplayer);
 		}
+
 	}
-	cout<<"black:"<<judge(roottable,1)<<"white:"<<judge(roottable,-1)<<endl;;
+	cout<<"black:"<<judge(roottable,1)<<" white:"<<judge(roottable,-1)<<endl;;
 	return 0;
 }
