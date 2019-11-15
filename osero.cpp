@@ -1,10 +1,4 @@
-#include<iostream>
-#include<vector>
-#include<algorithm>
-#include<stdlib.h>
-#include<time.h>
-#include<cmath>
-#include<random>
+#include<bits/stdc++.h>
 #define WIDTH 10
 using namespace std;
 random_device rnd;
