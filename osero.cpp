@@ -12,8 +12,8 @@ int roottable[WIDTH][WIDTH]={
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
 	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -330,7 +330,7 @@ Pos runAI(int table[WIDTH][WIDTH],int playernumber){
 			maxindex=k;
 		}
 	}
-	cout<<maxindex<<endl;
+	cout<<"(x,y)=("<<posli[maxindex].x<<","<<posli[maxindex].y<<")\n";
 	return posli[maxindex];
 }
 
