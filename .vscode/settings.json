@@ -2,7 +2,8 @@
   "files.associations": {
     "xiosbase": "cpp",
     "xlocale": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "iostream": "cpp"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }
