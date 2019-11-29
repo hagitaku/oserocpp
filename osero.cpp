@@ -11,18 +11,7 @@ int player[2] = { 1,-1 };
 int playercolor;
 int swi = 0;
 double are = 0.333;
-int roottable[WIDTH][WIDTH] = {
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+int roottable[WIDTH][WIDTH];
 
 
 int init()
@@ -189,28 +178,7 @@ string judgest(int table[WIDTH][WIDTH], int playernumber) {
 		re = "Lose";
 		return re;
 	}
-}
-
-int monte(int table[WIDTH][WIDTH], int playernumber, int color) {
-	if (nullmap(table) == 1 || (getcanpos(table, 1).size() == 0 && getcanpos(table, -1).size() == 0)) {
-		return judge(table, color);
-	}
-	vector<Pos> poslist = getcanpos(table, playernumber);
-	for (int i = 0; i < poslist.size(); i++) {
-		if ((poslist[i].y == 0 && poslist[i].x == 0) || (poslist[i].y == 0 && poslist[i].x == 9) || (poslist[i].y == 9 && poslist[i].x == 0) || (poslist[i].y == 9 && poslist[i].x == 9)) {
-			turn(poslist[i], table, playernumber);
-			return monte(table, -playernumber, color);
-		}
-	}
-	int count = 0;
-	int wi = poslist.size();
-	if (wi == 0) {
-		//pass
-		return monte(table, -playernumber, color);
-	}
-	turn(poslist[rnd() % wi], table, playernumber);
-	return monte(table, -playernumber, color);
-}
+};
 
 
 
@@ -255,83 +223,137 @@ int drawmap(int table[WIDTH][WIDTH], int playernumber) {
 }
 
 
-Pos runAI(int table[WIDTH][WIDTH], int playernumber) {
-	vector<Pos> posli = getcanpos(table, playernumber);
-	int n = posli.size();
+class montemachine{
+	public:
+	int flg=0;
+	montemachine(int ta[WIDTH][WIDTH]);
+	int table[WIDTH][WIDTH];
+
+	int monte(int table[WIDTH][WIDTH], int playernumber, int color) {
+		if (nullmap(table) == 1 || (getcanpos(table, 1).size() == 0 && getcanpos(table, -1).size() == 0)) {
+			return judge(table, color);
+		}
+		vector<Pos> poslist = getcanpos(table, playernumber);
+		int n=poslist.size();
+		for (int i = 0; i < n; i++) {
+			if ((poslist[i].y == 0 && poslist[i].x == 0) || (poslist[i].y == 0 && poslist[i].x == 9) || (poslist[i].y == 9 && poslist[i].x == 0) || (poslist[i].y == 9 && poslist[i].x == 9)) {
+				if(flg==0){
+					turn(poslist[i], table, playernumber);
+					return monte(table, -playernumber, color);
+				}else{
+					poslist.push_back(poslist[i]);
+				}
+				
+			}
+		}
+		n=poslist.size();
+		int count = 0;
+		int wi = poslist.size();
+		if (wi == 0) {
+			//pass
+			return monte(table, -playernumber, color);
+		}
+		turn(poslist[rnd() % wi], table, playernumber);
+		return monte(table, -playernumber, color);
+	};
+
+	Pos runAI(int playernumber) {
+		vector<Pos> posli = getcanpos(table, playernumber);
+		int n = posli.size();
+		for (int i = 0; i < n; i++) {
+			if ((posli[i].y == 0 && posli[i].x == 0) || (posli[i].y == 0 && posli[i].x == 9) || (posli[i].y == 9 && posli[i].x == 0) || (posli[i].y == 9 && posli[i].x == 9))
+			{
+				if(flg==0){
+					return posli[i];
+				}else{
+					posli.push_back(posli[i]);
+				}
+			}
+		}
+		n=posli.size();
+		int *valuelist;
+		int *trycount;
+		long double *ucbvalue;
+		valuelist = new int[n];
+		trycount = new int[n];
+		ucbvalue = new long double[n];
+		for (int i = 0; i < n; i++) {
+			valuelist[i] = 0;
+			trycount[i]=0;
+			ucbvalue[i]=0;
+		}
 
 
-	for (int i = 0; i < n; i++) {
-		if ((posli[i].y == 0 && posli[i].x == 0) || (posli[i].y == 0 && posli[i].x == 9) || (posli[i].y == 9 && posli[i].x == 0) || (posli[i].y == 9 && posli[i].x == 9))
+		
+		for (int i = 0; i < n * 2; i++)
 		{
-			return posli[i];
+			int ct[WIDTH][WIDTH];
+			deepcopy(table, ct);
+			turn(posli[i % n], ct, playernumber);
+			valuelist[i % n] += monte(ct, -playernumber, playernumber);
+			trycount[i % n] += 1;
 		}
-	}
-	int *valuelist;
-	valuelist = new int[n];
-	for (int i = 0; i < n; i++) {
-		valuelist[i] = 0;
-	}
-
-
-	vector<int> trycount(n);
-	vector<long double> ucbvalue(n);
-	for (int i = 0; i < n * 2; i++)
-	{
-		int ct[WIDTH][WIDTH];
-		deepcopy(table, ct);
-		turn(posli[i % n], ct, playernumber);
-		valuelist[i % n] += monte(ct, -playernumber, playernumber);
-		trycount[i % n] += 1;
-	}
-	int maxindex = 0;
-	for (int i = 0; i < tablevalue / 200; i++)cout << "#";
-	cout << "\n";
-	for (int i = n * 2; i <= tablevalue; i++) {
-		if (i % 200 == 0) {
-			cout << "#";
+		int maxindex = 0;
+		//for (int i = 0; i < tablevalue / 200; i++)cout << "#";
+		//cout << "\n";
+		for (int i = n * 2; i <= tablevalue; i++) {
+			if (i % 200 == 0) {
+				//cout << "#";
+			}
+			maxindex = 0;
+			for (int k = 0; k < n; k++) {
+				ucbvalue[k] = (double)valuelist[k] / (double)trycount[k] + are * sqrt((log(i) / (double)trycount[k]));
+			}
+			for (int k = 1; k < n; k++) {
+				if (ucbvalue[maxindex] < ucbvalue[k]) {
+					maxindex = k;
+				}
+			}
+			int ta[WIDTH][WIDTH];
+			deepcopy(table, ta);
+			turn(posli[maxindex], ta, playernumber);
+			valuelist[maxindex] += monte(ta, -playernumber, playernumber);
+			trycount[maxindex] += 1;
 		}
+		//探索完了
+
 		maxindex = 0;
-		for (int k = 0; k < n; k++) {
-			ucbvalue[k] = (double)valuelist[k] / (double)trycount[k] + are * sqrt((log(i) / (double)trycount[k]));
-		}
 		for (int k = 1; k < n; k++) {
 			if (ucbvalue[maxindex] < ucbvalue[k]) {
 				maxindex = k;
 			}
 		}
-		int ta[WIDTH][WIDTH];
-		deepcopy(table, ta);
-		turn(posli[maxindex], ta, playernumber);
-		valuelist[maxindex] += monte(ta, -playernumber, playernumber);
-		trycount[maxindex] += 1;
-	}
-	//探索完了
-
-	maxindex = 0;
-	for (int k = 1; k < n; k++) {
-		if (ucbvalue[maxindex] < ucbvalue[k]) {
-			maxindex = k;
-		}
-	}
-	cout << "\nWinning percentage:" << 100 * (double)valuelist[maxindex] / (double)trycount[maxindex] << "%" << endl;
-	delete[] valuelist;
-	return posli[maxindex];
-}
-
-
-class montemachine{
-	public:
-	montemachine(int aaa);
-	int x=0;
+		cout << "\nWinning percentage:" << 100 * (double)valuelist[maxindex] / (double)trycount[maxindex] << "%" << endl;
+		delete[] valuelist;
+		delete[] ucbvalue;
+		delete[] trycount;
+		return posli[maxindex];
+	};
 };
-montemachine::montemachine(int aaa){
-	
+montemachine::montemachine(int ta[WIDTH][WIDTH]){
+	deepcopy(ta,table);
+};
+
+int inittboard(int table[WIDTH][WIDTH]){
+	int hoge[WIDTH][WIDTH] = {
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
+	deepcopy(hoge,table);
+	return 0;
 };
 
 int main() {
 	Pos pos;
-	montemachine ddddd(1223);
-	cout<<ddddd.x<<endl;
+	
 	/*
 		int sockfd;
 		struct sockaddr_in addr;
@@ -351,12 +373,19 @@ int main() {
 		addr.sin_port = htons( port );
 		addr.sin_addr.s_addr = inet_addr( address );
 	//*/
-	init();//盤面の初期化
+	init();
 	int nowplayer = player[swi % 2];
+	int iniplayer=-nowplayer;
+	int playerwin=0;
+	int enemywin=0;
+	ONEMORE:
+	inittboard(roottable);
+	nowplayer=-iniplayer;
+	cout<<"player:"<<playerwin<<" enemy:"<<enemywin<<endl;
 	for (;; swi++)
 	{
 		nowplayer = player[swi % 2];
-		drawmap(roottable, nowplayer);
+		//drawmap(roottable, nowplayer);
 		if (getcanpos(roottable, 1).size() == 0 && getcanpos(roottable, -1).size() == 0) {
 			break;
 		}
@@ -365,7 +394,12 @@ int main() {
 		}
 		if (nowplayer == playercolor)
 		{
-
+			
+			montemachine ddddd(roottable);
+			ddddd.flg=1;
+			pos = ddddd.runAI(nowplayer);
+			turn(pos, roottable, nowplayer);
+			continue;
 			cout << "input x,y:";
 			while (true) {
 				char are;
@@ -378,12 +412,21 @@ int main() {
 			}
 		}
 		else {
-			pos = runAI(roottable, nowplayer);
+			montemachine ddddd(roottable);
+			pos = ddddd.runAI(nowplayer);
 			cout << "(x,y)=(" << pos.x << "," << pos.y << ")\n";
 			turn(pos, roottable, nowplayer);
 		}
 
 	}
-	cout << "black:" << judgest(roottable, 1) << " white:" << judgest(roottable, -1) << endl;;
+	
+	cout << "black:" << judgest(roottable, 1) << " white:" << judgest(roottable, -1) << endl;
+	if(judge(roottable, playercolor)==1){
+		playerwin++;
+	}else{
+		enemywin++;
+	}
+	iniplayer=-iniplayer;
+	goto ONEMORE;
 	return 0;
 }
