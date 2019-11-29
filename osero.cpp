@@ -3,7 +3,6 @@
 #include<algorithm>
 #include<cmath>
 #include<random>
-#include"socket.h"
 #define WIDTH 10
 using namespace std;
 random_device rnd;
@@ -24,18 +23,8 @@ int roottable[WIDTH][WIDTH] = {
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
-double valuetable[WIDTH][WIDTH] = {
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+
+
 int init()
 {
 	cout << "inputcolor(1 or -1)\nblack:1,white:-1:";
@@ -55,17 +44,6 @@ int tablevalue = 8000;
 
 int dirx[8] = { -1, 0, 1, 1, 1, 0,-1,-1 };
 int diry[8] = { -1,-1,-1, 0, 1, 1, 1, 0 };
-
-int drawvalue() {
-	for (int i = 0; i < WIDTH; i++) {
-		for (int j = 0; j < WIDTH; j++) {
-			printf("%f  ", valuetable[i][j] / tablevalue);
-		}
-		printf("\n");
-	}
-	printf("\n");
-	return 0;
-}
 
 int checkfield(int x, int y) {
 
@@ -341,9 +319,19 @@ Pos runAI(int table[WIDTH][WIDTH], int playernumber) {
 }
 
 
+class montemachine{
+	public:
+	montemachine(int aaa);
+	int x=0;
+};
+montemachine::montemachine(int aaa){
+	
+};
 
 int main() {
 	Pos pos;
+	montemachine ddddd(1223);
+	cout<<ddddd.x<<endl;
 	/*
 		int sockfd;
 		struct sockaddr_in addr;
