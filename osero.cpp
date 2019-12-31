@@ -357,8 +357,12 @@ string oserosocket(string senddata){
 	send(sockfd,sendc,senddata.size(),0);
 	int count=MAX;
 	while(count==MAX){
-		count=recv(sockfd,recved,)
+		count=recv(sockfd,recved,MAX,0);
+		for(int i=0;i<count;i++)recvdata+=recvdata[i];
 	}
+	delete[] sendc;
+	delete[] recved;
+	return recvdata;
 }
 
 
