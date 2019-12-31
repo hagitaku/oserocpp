@@ -1,9 +1,11 @@
-#include<iostream>
-#include<vector>
-#include<algorithm>
-#include<cmath>
-#include<random>
+#include<bits/stdc++.h>
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<unistd.h>
 #define WIDTH 10
+#define MAX 4096
 using namespace std;
 random_device rnd;
 int drawmap(int table[WIDTH][WIDTH], int playernumber);
@@ -12,13 +14,27 @@ int playercolor;
 int swi = 0;
 double are = 0.333;
 int roottable[WIDTH][WIDTH];
-
+int judgenum(char a){
+	if('0'<=a&&a<='9'){
+		return 1;
+	}else{
+		return 0;
+	}
+}
 
 int init()
 {
 	cout << "inputcolor(1 or -1)\nblack:1,white:-1:";
-	cin >> playercolor;
-
+	string s;
+	cin >> s;
+	if(s=="1"){
+		playercolor=1;
+	}else if(s=="-1"){
+		playercolor=-1;
+	}else{
+		cout<<"plaese type it again\n";
+		return init();
+	}
 	return 0;
 }
 
@@ -230,47 +246,22 @@ class montemachine{
 	int table[WIDTH][WIDTH];
 
 	int monte(int table[WIDTH][WIDTH], int playernumber, int color) {
-		if (nullmap(table) == 1 || (getcanpos(table, 1).size() == 0 && getcanpos(table, -1).size() == 0)) {
-			return judge(table, color);
-		}
 		vector<Pos> poslist = getcanpos(table, playernumber);
 		int n=poslist.size();
-		for (int i = 0; i < n; i++) {
-			if ((poslist[i].y == 0 && poslist[i].x == 0) || (poslist[i].y == 0 && poslist[i].x == 9) || (poslist[i].y == 9 && poslist[i].x == 0) || (poslist[i].y == 9 && poslist[i].x == 9)) {
-				if(flg==0){
-					turn(poslist[i], table, playernumber);
-					return monte(table, -playernumber, color);
-				}else{
-					poslist.push_back(poslist[i]);
-				}
-				
-			}
+		if(n==0&&getcanpos(table,-playernumber).size()==0){
+			return judge(table,color);
 		}
-		n=poslist.size();
-		int count = 0;
-		int wi = poslist.size();
-		if (wi == 0) {
+		if (n == 0) {
 			//pass
 			return monte(table, -playernumber, color);
 		}
-		turn(poslist[rnd() % wi], table, playernumber);
+		turn(poslist[rnd() % n], table, playernumber);
 		return monte(table, -playernumber, color);
 	};
 
 	Pos runAI(int playernumber) {
 		vector<Pos> posli = getcanpos(table, playernumber);
 		int n = posli.size();
-		for (int i = 0; i < n; i++) {
-			if ((posli[i].y == 0 && posli[i].x == 0) || (posli[i].y == 0 && posli[i].x == 9) || (posli[i].y == 9 && posli[i].x == 0) || (posli[i].y == 9 && posli[i].x == 9))
-			{
-				if(flg==0){
-					return posli[i];
-				}else{
-					posli.push_back(posli[i]);
-				}
-			}
-		}
-		n=posli.size();
 		int *valuelist;
 		int *trycount;
 		long double *ucbvalue;
@@ -294,12 +285,7 @@ class montemachine{
 			trycount[i % n] += 1;
 		}
 		int maxindex = 0;
-		//for (int i = 0; i < tablevalue / 200; i++)cout << "#";
-		//cout << "\n";
 		for (int i = n * 2; i <= tablevalue; i++) {
-			if (i % 200 == 0) {
-				//cout << "#";
-			}
 			maxindex = 0;
 			for (int k = 0; k < n; k++) {
 				ucbvalue[k] = (double)valuelist[k] / (double)trycount[k] + are * sqrt((log(i) / (double)trycount[k]));
@@ -351,41 +337,44 @@ int inittboard(int table[WIDTH][WIDTH]){
 	return 0;
 };
 
+
+string oserosocket(string senddata){
+	char *sendc=new char[senddata.size()];
+	for(int i=0;i<senddata.size();i++){
+		sendc[i]=senddata[i];
+	}
+	char *recved=new char[MAX];
+	string recvdata="";
+	int sockfd;
+	struct sockaddr_in addr;
+	if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0){
+		perror("socket");
+	}
+	addr.sin_family=AF_INET;
+	addr.sin_port=htons(50000);
+	addr.sin_addr.s_addr=inet_addr("127.0.1.1");
+	connect(sockfd,(struct sockaddr *)&addr ,sizeof(sockaddr_in));
+	send(sockfd,sendc,senddata.size(),0);
+	int count=MAX;
+	while(count==MAX){
+		count=recv(sockfd,recved,)
+	}
+}
+
+
 int main() {
 	Pos pos;
 	
-	/*
-		int sockfd;
-		struct sockaddr_in addr;
-
-		// ソケット生成
-		if( (sockfd = socket( AF_INET, SOCK_STREAM, 0) ) < 0 ) {
-			perror( "socket" );
-		}
-		int port;
-		string address;
-		cout<<"input address:";
-		cin>>address;
-		cout<<"input port:";
-		scanf("%d",&port);
-
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons( port );
-		addr.sin_addr.s_addr = inet_addr( address );
-	//*/
 	init();
 	int nowplayer = player[swi % 2];
-	int iniplayer=-nowplayer;
 	int playerwin=0;
 	int enemywin=0;
-	ONEMORE:
 	inittboard(roottable);
-	nowplayer=-iniplayer;
-	cout<<"player:"<<playerwin<<" enemy:"<<enemywin<<endl;
+	//tableの初期化
 	for (;; swi++)
 	{
 		nowplayer = player[swi % 2];
-		//drawmap(roottable, nowplayer);
+		drawmap(roottable, nowplayer);
 		if (getcanpos(roottable, 1).size() == 0 && getcanpos(roottable, -1).size() == 0) {
 			break;
 		}
@@ -394,21 +383,18 @@ int main() {
 		}
 		if (nowplayer == playercolor)
 		{
-			
-			montemachine ddddd(roottable);
-			ddddd.flg=1;
-			pos = ddddd.runAI(nowplayer);
-			turn(pos, roottable, nowplayer);
-			continue;
 			cout << "input x,y:";
-			while (true) {
-				char are;
-				cin >> pos.x >> are >> pos.y;
-				if (checkfield(pos.x, pos.y) == 1 && canput(pos.x, pos.y, roottable, nowplayer) == 1) {
-					turn(pos, roottable, nowplayer);
+			while(1){
+				string s;
+				cin>>s;
+				if(s.size()==3&&s[1]==','&&judgenum(s[0])==1&&judgenum(s[2])==1&&canput(s[0]-'0',s[2]-'0',roottable,nowplayer)==1&&canput(s[0]-'0',s[2]-'0',roottable,nowplayer)==1){
+					pos.x=s[0]-'0';
+					pos.y=s[2]-'0';
+					turn(pos,roottable,nowplayer);
 					break;
+				}else{
+					cout<<"plaese type it again\n";
 				}
-				cout << "Invalid.\nPlaease type it again\n";
 			}
 		}
 		else {
@@ -421,12 +407,5 @@ int main() {
 	}
 	
 	cout << "black:" << judgest(roottable, 1) << " white:" << judgest(roottable, -1) << endl;
-	if(judge(roottable, playercolor)==1){
-		playerwin++;
-	}else{
-		enemywin++;
-	}
-	iniplayer=-iniplayer;
-	goto ONEMORE;
 	return 0;
 }
