@@ -4,16 +4,16 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<unistd.h>
-#define WIDTH 10
 #define MAX 4096
 using namespace std;
 random_device rnd;
-int drawmap(int table[WIDTH][WIDTH], int playernumber);
+int WIDTH=8;
+int drawmap(int **table, int playernumber);
 int player[2] = { 1,-1 };
 int playercolor;
 int swi = 0;
 double are = 0.333;
-int roottable[WIDTH][WIDTH];
+int **roottable;
 int judgenum(char a){
 	if('0'<=a&&a<='9'){
 		return 1;
@@ -45,17 +45,17 @@ public:
 };
 
 int width = 20;
-int tablevalue = 8000;
+int tablevalue = 10000;
 
 int dirx[8] = { -1, 0, 1, 1, 1, 0,-1,-1 };
 int diry[8] = { -1,-1,-1, 0, 1, 1, 1, 0 };
 
 int checkfield(int x, int y) {
 
-	return (0 <= x && x <= 9 && 0 <= y && y <= 9) ? 1 : 0;
+	return (0 <= x && x < WIDTH && 0 <= y && y < WIDTH) ? 1 : 0;
 }
 
-int deepcopy(int root[WIDTH][WIDTH], int table[WIDTH][WIDTH]) {
+int deepcopy(int **root, int **table) {
 	for (int i = 0; i < WIDTH; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			table[i][j] = root[i][j];
@@ -64,7 +64,7 @@ int deepcopy(int root[WIDTH][WIDTH], int table[WIDTH][WIDTH]) {
 	return 0;
 }
 
-int canputflg(int x, int y, int table[WIDTH][WIDTH], int i, int playernumber) {
+int canputflg(int x, int y, int **table, int i, int playernumber) {
 	if (checkfield(x, y) == 0) {
 		return 0;
 	}
@@ -78,8 +78,7 @@ int canputflg(int x, int y, int table[WIDTH][WIDTH], int i, int playernumber) {
 		return canputflg(x + dirx[i], y + diry[i], table, i, playernumber);
 	}
 }
-
-int canput(int x, int y, int table[WIDTH][WIDTH], int playernumber) {
+int canput(int x, int y, int **table, int playernumber) {
 	if (table[y][x] != 0) {
 		return 0;
 	}
@@ -96,7 +95,7 @@ int canput(int x, int y, int table[WIDTH][WIDTH], int playernumber) {
 	return 0;
 }
 
-int reverse(int x, int y, int i, int table[WIDTH][WIDTH], int playernumber) {
+int reverse(int x, int y, int i, int **table, int playernumber) {
 	if (checkfield(x, y) == 0 || table[y][x] == 0)
 	{
 		return 0;
@@ -114,7 +113,7 @@ int reverse(int x, int y, int i, int table[WIDTH][WIDTH], int playernumber) {
 	return 0;
 }
 
-int turn(Pos pos, int table[WIDTH][WIDTH], int playernumber) {
+int turn(Pos pos, int **table, int playernumber) {
 	if (canput(pos.x, pos.y, table, playernumber) == 1) {
 		table[pos.y][pos.x] = playernumber;
 		for (int i = 0; i < 8; i++) {
@@ -126,7 +125,7 @@ int turn(Pos pos, int table[WIDTH][WIDTH], int playernumber) {
 
 
 
-int nullmap(int table[WIDTH][WIDTH]) {
+int nullmap(int **table) {
 	int a = 0, b = 0, c = 0;
 	int ysize = WIDTH;
 	for (int i = 0; i < WIDTH; i++) {
@@ -146,7 +145,7 @@ int nullmap(int table[WIDTH][WIDTH]) {
 }
 
 
-vector<Pos> getcanpos(int table[WIDTH][WIDTH], int playernumber) {
+vector<Pos> getcanpos(int **table, int playernumber) {
 	vector<Pos> list;
 	for (int i = 0; i < WIDTH; i++) {
 		for (int j = 0; j < WIDTH; j++) {
@@ -163,7 +162,7 @@ vector<Pos> getcanpos(int table[WIDTH][WIDTH], int playernumber) {
 
 
 
-int judge(int table[WIDTH][WIDTH], int playernumber) {//勝ちだったら1,負けは0
+int judge(int **table, int playernumber) {//勝ちだったら1,負けは0
 	int mikata = 0;
 	int teki = 0;
 	for (int i = 0; i < WIDTH; i++) {
@@ -184,7 +183,7 @@ int judge(int table[WIDTH][WIDTH], int playernumber) {//勝ちだったら1,負�
 	}
 }
 
-string judgest(int table[WIDTH][WIDTH], int playernumber) {
+string judgest(int **table, int playernumber) {
 	string re;
 	if (judge(table, playernumber) == 1) {
 		re = "Win";
@@ -198,15 +197,14 @@ string judgest(int table[WIDTH][WIDTH], int playernumber) {
 
 
 
-int drawmap(int table[WIDTH][WIDTH], int playernumber) {
-	int y = WIDTH;
+int drawmap(int **table, int playernumber) {
 	vector<Pos> can = getcanpos(table, playernumber);
 	printf("   ");
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < WIDTH; i++) {
 		printf("%3d", i);
 	}
 	printf("\n");
-	for (int i = 0; i < y; i++) {
+	for (int i = 0; i < WIDTH; i++) {
 		printf("%3d", i);
 		for (int j = 0; j < WIDTH; j++) {
 			int flg = 0;
@@ -242,10 +240,11 @@ int drawmap(int table[WIDTH][WIDTH], int playernumber) {
 class montemachine{
 	public:
 	int flg=0;
-	montemachine(int ta[WIDTH][WIDTH]);
-	int table[WIDTH][WIDTH];
+	int **table;
+	montemachine(int **ta);
+	~montemachine();
 
-	int monte(int table[WIDTH][WIDTH], int playernumber, int color) {
+	int monte(int **table, int playernumber, int color) {
 		vector<Pos> poslist = getcanpos(table, playernumber);
 		int n=poslist.size();
 		if(n==0&&getcanpos(table,-playernumber).size()==0){
@@ -278,7 +277,10 @@ class montemachine{
 		
 		for (int i = 0; i < n * 2; i++)
 		{
-			int ct[WIDTH][WIDTH];
+			int **ct=new int*[WIDTH];
+			for(int i=0;i<WIDTH;i++){
+				ct[i]=new int[WIDTH];
+			}
 			deepcopy(table, ct);
 			turn(posli[i % n], ct, playernumber);
 			valuelist[i % n] += monte(ct, -playernumber, playernumber);
@@ -295,7 +297,10 @@ class montemachine{
 					maxindex = k;
 				}
 			}
-			int ta[WIDTH][WIDTH];
+			int **ta=new int*[WIDTH];
+			for(int i=0;i<WIDTH;i++){
+				ta[i]=new int[WIDTH];
+			}
 			deepcopy(table, ta);
 			turn(posli[maxindex], ta, playernumber);
 			valuelist[maxindex] += monte(ta, -playernumber, playernumber);
@@ -316,24 +321,32 @@ class montemachine{
 		return posli[maxindex];
 	};
 };
-montemachine::montemachine(int ta[WIDTH][WIDTH]){
+montemachine::montemachine(int **ta){
+	table=new int*[WIDTH];
+	for(int i=0;i<WIDTH;i++){
+		table[i]=new int[WIDTH];
+	}
 	deepcopy(ta,table);
 };
+montemachine::~montemachine(){
+	for(int i=0;i<WIDTH;i++){
+		delete[] table[i];
+	}
+	delete[] table;
+}
 
-int inittboard(int table[WIDTH][WIDTH]){
-	int hoge[WIDTH][WIDTH] = {
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 1,-1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0,-1, 1, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	};
-	deepcopy(hoge,table);
+int inittboard(int**& table){
+	table=new int*[WIDTH];
+	for(int i=0;i<WIDTH;i++){
+		table[i]=new int[WIDTH];
+		for(int j=0;j<WIDTH;j++){
+			table[i][j]=0;
+		}
+	} 
+	table[WIDTH/2][WIDTH/2]=1;
+	table[WIDTH/2-1][WIDTH/2-1]=1;
+	table[WIDTH/2-1][WIDTH/2]=-1;
+	table[WIDTH/2][WIDTH/2-1]=-1;
 	return 0;
 };
 
@@ -366,9 +379,12 @@ string oserosocket(string senddata){
 }
 
 
-int main() {
+int main(int argc,char* argv[]) {
+	if(argc!=1){
+		string s=argv[1];
+		WIDTH=atoi(s.c_str());
+	}
 	Pos pos;
-	
 	init();
 	int nowplayer = player[swi % 2];
 	int playerwin=0;
