@@ -78,6 +78,7 @@ int canputflg(int x, int y, int **table, int i, int playernumber) {
 		return canputflg(x + dirx[i], y + diry[i], table, i, playernumber);
 	}
 }
+
 int canput(int x, int y, int **table, int playernumber) {
 	if (table[y][x] != 0) {
 		return 0;
@@ -274,7 +275,7 @@ class montemachine{
 		}
 
 
-		
+
 		for (int i = 0; i < n * 2; i++)
 		{
 			int **ct=new int*[WIDTH];
@@ -342,7 +343,7 @@ int inittboard(int**& table){
 		for(int j=0;j<WIDTH;j++){
 			table[i][j]=0;
 		}
-	} 
+	}
 	table[WIDTH/2][WIDTH/2]=1;
 	table[WIDTH/2-1][WIDTH/2-1]=1;
 	table[WIDTH/2-1][WIDTH/2]=-1;
@@ -425,7 +426,7 @@ int main(int argc,char* argv[]) {
 		}
 
 	}
-	
+
 	cout << "black:" << judgest(roottable, 1) << " white:" << judgest(roottable, -1) << endl;
 	return 0;
 }
